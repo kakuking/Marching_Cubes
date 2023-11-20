@@ -27,6 +27,9 @@ float yawAngle = 0.0f;      // n axis
 float pitchAngle = 0.0f;    // u axis
 float rollAngle = 0.0f;     // v axis
 
+float grid[32][32][32];
+float gridVerts[32][32][32][3];
+
 /* GLUT callback Handlers */
 void initCam()
 {
@@ -45,7 +48,7 @@ void initCam()
 }
 
 // Takes increment in yawAngle, pitchAngle, and rollAngle and then calculates new position of camera
-// Calls lookAt()
+// calls lookAt()
 void updateView()
 {
     glm::vec3 n = glm::normalize(cameraPos - cameraTarget);
@@ -96,47 +99,18 @@ static void display(void)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glColor3d(1,0,0);
 
-    glPushMatrix();
-        glTranslated(-2.4,1.2,-6);
-        glRotated(60,1,0,0);
-        glRotated(a,0,0,1);
-        glutSolidSphere(1,slices,stacks);
-    glPopMatrix();
+    glBegin(GL_POINTS);
+        for(int i = 0; i < 32; i++){
+            for(int j = 0; j < 32; j++){
+                for(int k = 0; k < 32; k++){
+                    glColor3f(grid[i][j][k],grid[i][j][k],0);
+                    glVertex3f(gridVerts[i][j][k][0], gridVerts[i][j][k][1], gridVerts[i][j][k][2]);
+                }
+            }
+        }
 
-    glPushMatrix();
-        glTranslated(0,1.2,-6);
-        glRotated(60,1,0,0);
-        glRotated(a,0,0,1);
-        glutSolidCone(1,1,slices,stacks);
-    glPopMatrix();
-
-    glPushMatrix();
-        glTranslated(2.4,1.2,-6);
-        glRotated(60,1,0,0);
-        glRotated(a,0,0,1);
-        glutSolidTorus(0.2,0.8,slices,stacks);
-    glPopMatrix();
-
-    glPushMatrix();
-        glTranslated(-2.4,-1.2,-6);
-        glRotated(60,1,0,0);
-        glRotated(a,0,0,1);
-        glutWireSphere(1,slices,stacks);
-    glPopMatrix();
-
-    glPushMatrix();
-        glTranslated(0,-1.2,-6);
-        glRotated(60,1,0,0);
-        glRotated(a,0,0,1);
-        glutWireCone(1,1,slices,stacks);
-    glPopMatrix();
-
-    glPushMatrix();
-        glTranslated(2.4,-1.2,-6);
-        glRotated(60,1,0,0);
-        glRotated(a,0,0,1);
-        glutWireTorus(0.2,0.8,slices,stacks);
-    glPopMatrix();
+    glEnd();
+    
 
     glutSwapBuffers();
 }
@@ -301,7 +275,7 @@ int main(int argc, char *argv[])
     glutKeyboardFunc(key);
     glutIdleFunc(idle);
 
-    glClearColor(1,1,1,1);
+    glClearColor(0,0,0,1);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -320,6 +294,30 @@ int main(int argc, char *argv[])
     glMaterialfv(GL_FRONT, GL_DIFFUSE,   mat_diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR,  mat_specular);
     glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
+
+    float radius = 2.f;
+    float centerX = -3 + 16.0/5.0;
+    float centerY = -3 + 16.0/5.0;
+    float centerZ = -3 - 16.0/5.0;
+    for(int i = 0; i < 32; i++){
+        for(int j = 0; j < 32; j++){
+            for(int k = 0; k < 32; k++){
+                float x = -3 + i/5.0;
+                float y = -3 + j/5.0;
+                float z = -3 - k/5.0;
+                gridVerts[i][j][k][0] = x;
+                gridVerts[i][j][k][1] = y;
+                gridVerts[i][j][k][2] = z;
+
+                // grid[32*32*i + 32*j + k] =  (-3 - i/5)/-9.4;
+                float delX = x - centerX;
+                float delY = y - centerY;
+                float delZ = z - centerZ;
+                float dis = sqrtf(powf(delX, 2.f) + powf(delY, 2.f) + powf(delZ, 2.f));
+                grid[i][j][k] = dis <= radius ? 1 : 0;
+            }
+        }
+    }
 
     glutMainLoop();
 
