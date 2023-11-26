@@ -60,6 +60,7 @@
     }
 
     .image{
+        margin: 10px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -75,35 +76,11 @@
 <script>
 
     function sampleNext(aheadOrBack){
-        let sampleImg = document.getElementById("sampleImg");
+        let sampleImg = document.getElementById("sampleImg2");
         let curImg = sampleImg.getAttribute('src');
         let curIt = +curImg.charAt(curImg.length - 5);
         curIt += aheadOrBack;
-        let numOfThings = 7;
-        curIt = curIt % numOfThings;
-
-        if(curIt == -1 && aheadOrBack == -1){
-            curIt = numOfThings - 1;
-        }
-
-        sampleImg.setAttribute('src', curImg.substring(0, curImg.length - 5) + curIt + ".jpg");
-        
-        
-        if(curIt != 0){
-            document.getElementById("sampleIteration").innerHTML
-            = `${curIt}/${numOfThings}`;
-        } else{
-            document.getElementById("sampleIteration").innerHTML 
-            = `${numOfThings}/${numOfThings}`
-        }
-    }
-
-    function sampleNext1(aheadOrBack){
-        let sampleImg = document.getElementById("sampleImg1");
-        let curImg = sampleImg.getAttribute('src');
-        let curIt = +curImg.charAt(curImg.length - 5);
-        curIt += aheadOrBack;
-        let numOfThings = 5;
+        let numOfThings = 4;
         curIt = curIt % numOfThings;
 
         if(curIt == -1 && aheadOrBack == -1){
@@ -122,8 +99,8 @@
         }
     }
 
-    function sampleNext2(aheadOrBack){
-        let sampleImg = document.getElementById("sampleImg2");
+    function sampleNext1(aheadOrBack){
+        let sampleImg = document.getElementById("sampleImg3");
         let curImg = sampleImg.getAttribute('src');
         let curIt = +curImg.charAt(curImg.length - 5);
         curIt += aheadOrBack;
@@ -145,7 +122,6 @@
             = `${numOfThings}/${numOfThings}`
         }
     }
-
 </script>
 
 <body>
@@ -158,66 +134,59 @@
         The algorithm has an ingenious method to do this, it splits the space into cubes to analyse. Each cube consists of 8 vertices (the values at which we are given, either 1 or 0).
         Then, depending on the configuration of the vertices which are 1 and which are 0, the mesh that lies completely within that cube is generated.
         Which this may result in 2<sup>8</sup> possibilities, they boil down to 15 unique configurations, the rest 
-        are symmetries of the same. These 15 can be seen below: 
+        are symmetries of the same. In order to get all possible permutaions of this cube, I have used a 
+        lookup table that contains the triangles necessary for each vertice being a 1.
+        
+        <br>
+        <strong>Note: The vertices rendered red are 0s , and yellows are 1s </strong>
+        <br>
+        To begin With let us look at the initial result:
         <br>
     </div>
-    <div class="controls">
-        <button class="btnControl" onclick="sampleNext1(-1)">← Prev</button>
-        <button class="btnControl" onclick="sampleNext1(1)">Next →</button>
-    </div>
     <div class="image">
-        <div id="sampleIteration1">1/5</div>
-        <img id="sampleImg1" src="./Screenshots/Par1.jpg" alt="" srcset="">
+        <img id="sampleImg" src="./Screenshots_1/0.jpg" alt="" srcset="">
     </div>
     
-    <div class="production">
-        glFrustum(-ar, ar, -1.0, 1.0, 2.0, 100.0);
+    <div class="description">Here as can be seen, the mesh are open, since the points beyond the border
+        are not considered. To combat this, I have set all surface points to a value of 0. Here is the updated view
     </div>
-    <div class="description">Where <i>ar</i> is the aspect ratio of the window</div>
+    <div class="image">
+        <img id="sampleImg" src="./Screenshots_1/1.jpg" alt="" srcset="">
+    </div>
+    <div class="description">
+        <br>
+        As can be seen, the Meshes are now closed.
+        <br>
+    </div>
+
+    <div class="description">
+        <br>
+        To get a better view of the algorithm, here are some complex shapes rendered in the algorithm:    
+    </div>
+
     <div class="controls">
         <button class="btnControl" onclick="sampleNext(-1)">← Prev</button>
         <button class="btnControl" onclick="sampleNext(1)">Next →</button>
     </div>
     <div class="image">
-        <div id="sampleIteration">1/7</div>
-        <img id="sampleImg" src="./Screenshots/Per1.jpg" alt="" srcset="">
+        <div id="sampleIteration1">1/4</div>
+        <img id="sampleImg2" src="./Screenshots_2/1.jpg" alt="" srcset="">
     </div>
 
     <div class="description">
         <br>
-        As can be seen, any wall/roof of the room that obstructs the camera does not render.
-        <br>
-        Moving on, we use perspective projection. To accomplish this, we use
-        <br>
-        <br>
+        And here are the same without the red vertices:     
     </div>
-    <div class="production">
-        glOrtho(-20, 20, -20, 30, 0, 100);
-    </div>
+
     <div class="controls">
         <button class="btnControl" onclick="sampleNext1(-1)">← Prev</button>
         <button class="btnControl" onclick="sampleNext1(1)">Next →</button>
     </div>
     <div class="image">
-        <div id="sampleIteration1">1/5</div>
-        <img id="sampleImg1" src="./Screenshots/Par1.jpg" alt="" srcset="">
-    </div>
-
-    <div class="description">
-        <br>
-        However, in paralled projection, we run into an issue. Since there is no measure of depth as there is in perspective projection, 
-        sometimes our function renders some walls/roofs that we think should not be rendered. This can be seen below, the first frame shows the
-        erroneos versions, the second shows the proper image that can be obtained usually by moving the camera backwards along the n axis
-    </div>
-
-    <div class="controls">
-        <button class="btnControl" onclick="sampleNext2(-1)">← Prev</button>
-        <button class="btnControl" onclick="sampleNext2(1)">Next →</button>
-    </div>
-    <div class="image">
         <div id="sampleIteration2">1/4</div>
-        <img id="sampleImg2" src="./Screenshots/ParError1.jpg" alt="" srcset="">
+        <img id="sampleImg3" src="./Screenshots_3/1.jpg" alt="" srcset="">
     </div>
+
     <h1 id="header">Thank You</h1>
 </body>
 </html>
