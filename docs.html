@@ -80,7 +80,7 @@
         let curImg = sampleImg.getAttribute('src');
         let curIt = +curImg.charAt(curImg.length - 5);
         curIt += aheadOrBack;
-        let numOfThings = 4;
+        let numOfThings = 5;
         curIt = curIt % numOfThings;
 
         if(curIt == -1 && aheadOrBack == -1){
@@ -161,7 +161,7 @@
 
     <div class="description">
         <br>
-        To get a better view of the algorithm, here are some complex shapes rendered in the algorithm:    
+        To get a better view of the algorithm, here are some complex shapes rendered in the algorithm. Here, the last image is at a higher cube-edge-size, as can be seen, some of the detail is lost here
     </div>
 
     <div class="controls">
@@ -169,7 +169,7 @@
         <button class="btnControl" onclick="sampleNext(1)">Next →</button>
     </div>
     <div class="image">
-        <div id="sampleIteration1">1/4</div>
+        <div id="sampleIteration1">1/5</div>
         <img id="sampleImg2" src="./Screenshots_2/1.jpg" alt="" srcset="">
     </div>
 

@@ -27,7 +27,7 @@ float yawAngle = 0.0f;      // n axis
 float pitchAngle = 0.0f;    // u axis
 float rollAngle = 0.0f;     // v axis
 
-float gridSide = 1.0/5.0;
+float gridSide = 1.0/2.0;
 int numVerts = (int)6.0f/gridSide;          // goes from -3 to 3
 
 float grid[32][32][32];
