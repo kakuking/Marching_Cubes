@@ -6,6 +6,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <vector>
+#include <fstream>
+#include <sstream>
 #include <iostream>
 #include <stdlib.h>
 
@@ -28,10 +30,12 @@ float pitchAngle = 0.0f;    // u axis
 float rollAngle = 0.0f;     // v axis
 
 float gridSide = 1.0/2.0;
-int numVerts = (int)6.0f/gridSide;          // goes from -3 to 3
 
-float grid[32][32][32];
-float gridVerts[32][32][32][3];
+const int numSideVerts = 32;
+
+float grid[numSideVerts][numSideVerts][numSideVerts];
+float gridVerts[numSideVerts][numSideVerts][numSideVerts][3];
+
 
 std::vector<std::vector<float>> triangles;  // So we can pop the last step easily
 int curMarch = 0;
@@ -111,12 +115,12 @@ void updateView()
 }
 
 void marchForwards(){
-    if(curMarch >= 31*31*31)
+    if(curMarch >= (numSideVerts - 1)*(numSideVerts - 1)*(numSideVerts - 1))
         return;
     
-    int curI = curMarch/(31*31);
-    int curJ = (curMarch - curI*31*31)/31;
-    int curK = (curMarch - curI*31*31 - curJ*31);
+    int curI = curMarch/((numSideVerts - 1)*(numSideVerts - 1));
+    int curJ = (curMarch - curI*(numSideVerts - 1)*(numSideVerts - 1))/(numSideVerts - 1);
+    int curK = (curMarch - curI*(numSideVerts - 1)*(numSideVerts - 1) - curJ*(numSideVerts - 1));
 
     int idx = 0;
     for(int i = 0; i < 8; i++){
@@ -124,7 +128,7 @@ void marchForwards(){
         int idxJ = curJ + oldVertDeltas[i][1];
         int idxK = curK + oldVertDeltas[i][2];
 
-        if(grid[idxI][idxJ][idxK] == 1)
+        if(grid[idxI][idxJ][idxK] >= 1)
             idx += 1 << i;
     }
 
@@ -177,18 +181,18 @@ static void display(void)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glColor4f(1,0,0, 0.2);
 
-    glBegin(GL_POINTS);
-        for(int i = 0; i < 32; i++){
-            for(int j = 0; j < 32; j++){
-                for(int k = 0; k < 32; k++){
-                    glColor4f(1,grid[i][j][k],0, 0.1f);
-                    glVertex3f(gridVerts[i][j][k][0], gridVerts[i][j][k][1], gridVerts[i][j][k][2]);
-                }
-            }
-        }
-    glEnd();
+    // glBegin(GL_POINTS);
+    //     for(int i = 0; i < numSideVerts; i++){
+    //         for(int j = 0; j < numSideVerts; j++){
+    //             for(int k = 0; k < numSideVerts; k++){
+    //                 glColor4f(1,grid[i][j][k],0, 0.1f);
+    //                 glVertex3f(gridVerts[i][j][k][0], gridVerts[i][j][k][1], gridVerts[i][j][k][2]);
+    //             }
+    //         }
+    //     }
+    // glEnd();
 
-    glColor4f(0.0, 0.0, 1.0f, 0.6f);
+    glColor4f(0.0, 0.0, 1.0f, 0.3f);
 
     glBegin(GL_TRIANGLES);
         for(std::vector<float> tri: triangles){
@@ -340,8 +344,38 @@ static void idle(void)
     glutPostRedisplay();
 }
 
-/* Program entry point */
 
+std::vector<int> readSkull(){
+    // Open the file
+    std::ifstream file("skull.txt");
+
+    // Check if the file is open
+    if (!file.is_open()) {
+        std::cerr << "Error opening file.\n";
+        return std::vector<int>(); // Exit with an error
+    }
+
+    std::vector<int> numbers; // Use a vector to dynamically store the integers
+
+    // Read each line from the file
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        int number;
+
+        // Read integers from the current line
+        while (iss >> number) {
+            numbers.push_back(number);
+        }
+    }
+
+    // Close the file
+    file.close();
+
+    return numbers;
+}
+
+/* Program entry point */
 int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
@@ -375,9 +409,9 @@ int main(int argc, char *argv[])
     float centerCX = -3 + 16.0/5.0;
     float centerCY = -3 + 8.0/5.0;
     float centerCZ = -3 - 16.0/5.0;
-    for(int i = 0; i < numVerts; i++){
-        for(int j = 0; j < numVerts; j++){
-            for(int k = 0; k < numVerts; k++){
+    for(int i = 0; i < numSideVerts; i++){
+        for(int j = 0; j < numSideVerts; j++){
+            for(int k = 0; k < numSideVerts; k++){
                 
                 float x = -3 + i*gridSide;
                 float y = -3 + j*gridSide;
@@ -386,7 +420,7 @@ int main(int argc, char *argv[])
                 gridVerts[i][j][k][1] = y;
                 gridVerts[i][j][k][2] = z;
 
-                // grid[32*32*i + 32*j + k] =  (-3 - i/5)/-9.4;
+                // grid[numSideVerts*numSideVerts*i + numSideVerts*j + k] =  (-3 - i/5)/-9.4;
                 float delX = x - centerCX;
                 float delY = y - centerCY;
                 float delZ = z - centerCZ;
@@ -397,22 +431,21 @@ int main(int argc, char *argv[])
     }
 
     float radiusT = 2.2f;
-    float radiusTubeT = 0.3f;
+    float radiusTubeT = 0.5f;
     float centerTX = -3 + 24.0/5.0;
     float centerTY = -3 + 12.0/5.0;
     float centerTZ = -3 - 16.0/5.0;
-    for(int i = 0; i < 32; i++){
-        for(int j = 0; j < 32; j++){
-            for(int k = 0; k < 32; k++){
+    for(int i = 0; i < numSideVerts; i++){
+        for(int j = 0; j < numSideVerts; j++){
+            for(int k = 0; k < numSideVerts; k++){
 
                 float x = -3 + i*gridSide;
                 float y = -3 + j*gridSide;
                 float z = -3 - k*gridSide;
-                gridVerts[i][j][k][0] = x;
-                gridVerts[i][j][k][1] = y;
-                gridVerts[i][j][k][2] = z;
+                // gridVerts[i][j][k][0] = x;
+                // gridVerts[i][j][k][1] = y;
+                // gridVerts[i][j][k][2] = z;
 
-                // grid[32*32*i + 32*j + k] =  (-3 - i/5)/-9.4;
                 float delX = x - centerTX;
                 float delY = y - centerTY;
                 float delZ = z - centerTZ;
@@ -424,30 +457,40 @@ int main(int argc, char *argv[])
     }
 
     // So that sides of grid are 0, (closed figures made)
-    for(int i = 0; i < 32; i++){
-        for(int j = 0; j < 32; j++){
+    for(int i = 0; i < numSideVerts; i++){
+        for(int j = 0; j < numSideVerts; j++){
             grid[i][j][0] = 0;
-            grid[i][j][31] = 0;
+            grid[i][j][(numSideVerts - 1)] = 0;
             
             grid[0][i][j] = 0;
-            grid[31][i][j] = 0;
+            grid[(numSideVerts - 1)][i][j] = 0;
 
             grid[i][0][j] = 0;
-            grid[i][31][j] = 0;
+            grid[i][(numSideVerts - 1)][j] = 0;
         }
     }
 
     // A base of 1s at y = 1
-    for(int i = 1; i < 31; i++){
-        for(int j = 1; j < 31; j++){
+    for(int i = 1; i < (numSideVerts - 1); i++){
+        for(int j = 1; j < (numSideVerts - 1); j++){
             grid[i][1][j] = 1;
         }
     }
 
     // Random Pillar
-    for(int i = 2; i < 31; i++){
+    for(int i = 2; i < (numSideVerts - 1); i++){
         grid[16][i][16] = 1;
     }
+
+    // std::vector<int> skull = readSkull();
+    // for(int i = 0; i < (numSideVerts - 1); i++){
+    //     for(int j = 0; j < (numSideVerts - 1); j++){
+    //         for(int k = 0; k < (numSideVerts - 1); k++){
+    //             if((numSideVerts - 1)*(numSideVerts - 1)*i + (numSideVerts - 1)*j + k < skull.size())
+    //                 grid[i][j][j] = skull.at((numSideVerts - 1)*(numSideVerts - 1)*i + (numSideVerts - 1)*j + k);
+    //         }
+    //     }
+    // }
 
     // grid[0][0][0] = 1;
     // grid[1][0][0] = 1;
